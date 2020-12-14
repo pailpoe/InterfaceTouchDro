@@ -1,17 +1,15 @@
-#include <SPI.h>
-#include <Wire.h>
+
 #include "HardwareTimer.h"
 #include "QuadDecoder.h"
 
 
 
-
 //Hard timer 1 for X scale quadrature : T1C1 (PA8) and T1C2 (PA9)
-HardwareTimer timer_X(TIM1);
+HardwareTimer timer_X(1);
 //Hard timer 3 for Y scale quadrature : T3C1 (PA6) and T3C2 (PA7)  
-HardwareTimer timer_Y(TIM3);
+HardwareTimer timer_Y(3);
 //Hard timer 2 for Z scale quadrature : T2C1 (PA0) and T2C2 (PA1)  
-HardwareTimer timer_Z(TIM2);
+HardwareTimer timer_Z(2);
 
 //Quad decoder Class
 QuadDecoder Quad_X(512,false,false);
@@ -20,29 +18,6 @@ QuadDecoder Quad_Z(512,false,false);
 
 
 
-typedef struct
-{
-  boolean Inverted_X;  
-  boolean Inverted_Y;
-  boolean Inverted_Z;
-  boolean Diameter_Mode_Y;
-  unsigned int  Reso_X;
-  unsigned int  Reso_Y;
-  unsigned int  Reso_Z;
-} sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,false,512,512,512};
-
-enum eMS_Dro 
-        {   
-      State_Normal, 
-      State_In_Config 
-    };
-
-
-// Variable
-sConfigDro ConfigDro;
-eMS_Dro MS_Dro;
-unsigned long TestSys;
 
 //******************  IT function
 void IT_Overflow_X(){
@@ -75,15 +50,13 @@ void SysTick_Handler()
 
 void setup()   {
 
-  MS_Dro = State_Normal; 
-
+ 
   //Test led PC13
   pinMode(PC13, OUTPUT);  //
   digitalWrite(PC13, LOW);
 
   /* Systick used by I2C at 1Khz... */ 
   systick_attach_callback(SysTick_Handler);
-
 
 
   
@@ -126,14 +99,27 @@ void setup()   {
   timer_Z.resume();                 //start the encoder... 
   //timer_Z.getCount();
 
-
+  Serial2.begin(38400);
 }
 
 void loop() 
 {
-
-    Serial.print("-");
+    //Update encoder
     Quad_X.CounterValue(timer_X.getCount());
     Quad_Y.CounterValue(timer_Y.getCount());
     Quad_Z.CounterValue(timer_Z.getCount());
+    
+
+
+  
+    digitalWrite(PC13, LOW);
+    delay(500);
+    digitalWrite(PC13, HIGH);
+    delay(500);
+    Serial2.print("Hello World");
+    Quad_X.CounterValue(timer_X.getCount());
+    Quad_Y.CounterValue(timer_Y.getCount());
+    Quad_Z.CounterValue(timer_Z.getCount());
+
+ 
 }
