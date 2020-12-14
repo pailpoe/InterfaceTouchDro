@@ -10,12 +10,15 @@ HardwareTimer timer_X(1);
 HardwareTimer timer_Y(3);
 //Hard timer 2 for Z scale quadrature : T2C1 (PA0) and T2C2 (PA1)  
 HardwareTimer timer_Z(2);
+//Hard timer 2 for W scale quadrature : T4C1 (PB6) and T4C2 (PB7)  
+HardwareTimer timer_W(4);
+
 
 //Quad decoder Class
 QuadDecoder Quad_X(512,false,false);
 QuadDecoder Quad_Y(512,false,false);
 QuadDecoder Quad_Z(512,false,false);
-
+QuadDecoder Quad_W(512,false,false);
 
 
 
@@ -41,6 +44,15 @@ if (timer_Z.getDirection()){
   Quad_Z.OverflowPlus();
 }
 }
+void IT_Overflow_W(){
+if (timer_W.getDirection()){
+   Quad_W.OverflowMinus();
+} else{
+  Quad_W.OverflowPlus();
+}
+
+
+}
 void SysTick_Handler() 
 { 
   //TestSys++;
@@ -58,7 +70,7 @@ void setup()   {
   /* Systick used by I2C at 1Khz... */ 
   systick_attach_callback(SysTick_Handler);
 
-
+  
   
   //## configure timer_X as quadrature encoder ##
   pinMode(PA8, INPUT_PULLUP);  //channel A
@@ -98,8 +110,21 @@ void setup()   {
   timer_Z.attachInterrupt(0, IT_Overflow_Z); //Overflow interrupt  
   timer_Z.resume();                 //start the encoder... 
   //timer_Z.getCount();
+  //## configure timer_W as quadrature encoder ##
+  pinMode(PB6, INPUT_PULLUP);  //channel A
+  pinMode(PB7, INPUT_PULLUP);  //channel B
+  timer_W.setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
+  timer_W.pause(); //stop... 
+  timer_W.setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
+  timer_W.setOverflow(0xFFFF);    
+  timer_W.setCount(0);          //reset the counter. 
+  timer_W.setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
+  timer_W.attachInterrupt(0, IT_Overflow_W); //Overflow interrupt  
+  timer_W.resume();                 //start the encoder... 
 
+  //Start
   Serial2.begin(38400);
+
 }
 
 void loop() 
@@ -107,15 +132,17 @@ void loop()
     long Xvalue;
     long Yvalue;
     long Zvalue;
+    long Wvalue;
     char bufferChar[16];
     //Update encoder
     Quad_X.CounterValue(timer_X.getCount());
     Quad_Y.CounterValue(timer_Y.getCount());
     Quad_Z.CounterValue(timer_Z.getCount());
+    Quad_W.CounterValue(timer_W.getCount());
     Xvalue = Quad_X.GetValuelong(); 
     Yvalue = Quad_Y.GetValuelong(); 
     Zvalue = Quad_Z.GetValuelong(); 
-   
+    Wvalue = Quad_W.GetValuelong(); 
     delay(50);
     digitalWrite(OUT_LED, !digitalRead(OUT_LED));
     sprintf(bufferChar,"X%ld;",Xvalue);
@@ -123,5 +150,7 @@ void loop()
     sprintf(bufferChar,"Y%ld;",Yvalue);
     Serial2.print(bufferChar);
     sprintf(bufferChar,"Z%ld;",Zvalue);
-    Serial2.print(bufferChar);    
+    Serial2.print(bufferChar);
+    sprintf(bufferChar,"W%ld;",Wvalue);
+    Serial2.print(bufferChar);     
 }
