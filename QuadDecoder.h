@@ -20,6 +20,7 @@ void SwitchMode(); //Absolute or relative
 boolean RelativeModeActived(); // true if actived
 
 float GetValue(); //Absolut or reltive, depend of the mode
+long GetValuelong(); //Absolut or reltive, depend of the mode
 
 void SetResolution(unsigned int  Resolution);
 void SetSens(boolean Sens);

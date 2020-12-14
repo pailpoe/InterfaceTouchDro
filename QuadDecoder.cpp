@@ -46,6 +46,23 @@ float QuadDecoder::GetValue()
   
   return  (float)temp/_Resolution; 
 }
+
+long QuadDecoder::GetValuelong()
+{
+  long temp;
+  ComputeAbsoluteValue();
+  if ( _RelativeModeActived == false)
+  {
+    //Absolute
+    temp = _AbsoluteCounter-_AbsoluteCounterZero;   
+  }
+  else
+  {
+    //relative  
+    temp = _AbsoluteCounter-_RelativeCounterZero;
+  } 
+  return  temp;   
+}
 void QuadDecoder::SwitchMode()
 {
   _RelativeModeActived = !_RelativeModeActived;  
@@ -106,4 +123,3 @@ void QuadDecoder::ToggleDiameterMode()
 {
   _DiameterMode = !_DiameterMode;  
 }
-

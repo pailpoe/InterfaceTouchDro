@@ -1,8 +1,8 @@
-
+//Interface touch dro
 #include "HardwareTimer.h"
 #include "QuadDecoder.h"
 
-
+#define OUT_LED PC13
 
 //Hard timer 1 for X scale quadrature : T1C1 (PA8) and T1C2 (PA9)
 HardwareTimer timer_X(1);
@@ -52,8 +52,8 @@ void setup()   {
 
  
   //Test led PC13
-  pinMode(PC13, OUTPUT);  //
-  digitalWrite(PC13, LOW);
+  pinMode(OUT_LED, OUTPUT);  //
+  digitalWrite(OUT_LED, LOW);
 
   /* Systick used by I2C at 1Khz... */ 
   systick_attach_callback(SysTick_Handler);
@@ -104,22 +104,24 @@ void setup()   {
 
 void loop() 
 {
+    long Xvalue;
+    long Yvalue;
+    long Zvalue;
+    char bufferChar[16];
     //Update encoder
     Quad_X.CounterValue(timer_X.getCount());
     Quad_Y.CounterValue(timer_Y.getCount());
     Quad_Z.CounterValue(timer_Z.getCount());
-    
-
-
-  
-    digitalWrite(PC13, LOW);
-    delay(500);
-    digitalWrite(PC13, HIGH);
-    delay(500);
-    Serial2.print("Hello World");
-    Quad_X.CounterValue(timer_X.getCount());
-    Quad_Y.CounterValue(timer_Y.getCount());
-    Quad_Z.CounterValue(timer_Z.getCount());
-
- 
+    Xvalue = Quad_X.GetValuelong(); 
+    Yvalue = Quad_Y.GetValuelong(); 
+    Zvalue = Quad_Z.GetValuelong(); 
+   
+    delay(50);
+    digitalWrite(OUT_LED, !digitalRead(OUT_LED));
+    sprintf(bufferChar,"X%ld;",Xvalue);
+    Serial2.print(bufferChar);
+    sprintf(bufferChar,"Y%ld;",Yvalue);
+    Serial2.print(bufferChar);
+    sprintf(bufferChar,"Z%ld;",Zvalue);
+    Serial2.print(bufferChar);    
 }
