@@ -18,3 +18,7 @@ eee : spindle speed in RPM ( example : -800 or 2569)
 - Sensor Z : PA0 ( A ) and PA1 ( B ), use the hardware timer 2 
 - Sensor W : PB6 ( A ) and PB7 ( B ), use the hardware timer 4 
 - Serial : PA3 ( RX_board ) and PA2 ( TX_board ), use the hardware serial 2  
+
+# Installation
+- IDE : Arduino 1.8.8 ++
+- Core : Arduino STM32 ( https://github.com/rogerclarkmelbourne/Arduino_STM32 )
