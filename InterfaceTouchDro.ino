@@ -1,130 +1,72 @@
 //Interface touch dro
+//Pailpoe, 2020
 #include "HardwareTimer.h"
-#include "QuadDecoder.h"
+
 
 #define OUT_LED PC13
 
-//Hard timer 1 for X scale quadrature : T1C1 (PA8) and T1C2 (PA9)
+//Hard timer 1 for X scale : T1C1 (PA8) and T1C2 (PA9)
 HardwareTimer timer_X(1);
-//Hard timer 3 for Y scale quadrature : T3C1 (PA6) and T3C2 (PA7)  
+//Hard timer 3 for Y scale : T3C1 (PA6) and T3C2 (PA7)  
 HardwareTimer timer_Y(3);
-//Hard timer 2 for Z scale quadrature : T2C1 (PA0) and T2C2 (PA1)  
+//Hard timer 2 for Z scale : T2C1 (PA0) and T2C2 (PA1)  
 HardwareTimer timer_Z(2);
-//Hard timer 2 for W scale quadrature : T4C1 (PB6) and T4C2 (PB7)  
+//Hard timer 2 for W scale : T4C1 (PB6) and T4C2 (PB7)  
 HardwareTimer timer_W(4);
 
-
-//Quad decoder Class
-QuadDecoder Quad_X(512,false,false);
-QuadDecoder Quad_Y(512,false,false);
-QuadDecoder Quad_Z(512,false,false);
-QuadDecoder Quad_W(512,false,false);
-
-
+//Variable overflow counter
+long lOverflowX = 0;
+long lOverflowY = 0;
+long lOverflowZ = 0;
+long lOverflowW = 0;
 
 //******************  IT function
-void IT_Overflow_X(){
-if (timer_X.getDirection()){
-  Quad_X.OverflowMinus();
-} else{
-  Quad_X.OverflowPlus();
+void IT_Handler_Quadrature_X()
+{
+  if (timer_X.getDirection()) lOverflowX--;
+  else lOverflowX++;
 }
+void IT_Handler_Quadrature_Y()
+{
+  if (timer_Y.getDirection())lOverflowY--;
+  else lOverflowY++;
 }
-void IT_Overflow_Y(){
-if (timer_Y.getDirection()){
-   Quad_Y.OverflowMinus();
-} else{
-  Quad_Y.OverflowPlus();
+void IT_Handler_Quadrature_Z()
+{
+  if (timer_Z.getDirection())lOverflowZ--;
+  else lOverflowZ++; 
 }
-}
-void IT_Overflow_Z(){
-if (timer_Z.getDirection()){
-   Quad_Z.OverflowMinus();
-} else{
-  Quad_Z.OverflowPlus();
-}
-}
-void IT_Overflow_W(){
-if (timer_W.getDirection()){
-   Quad_W.OverflowMinus();
-} else{
-  Quad_W.OverflowPlus();
-}
-
-
+void IT_Handler_Quadrature_W()
+{
+  if (timer_W.getDirection())lOverflowW--;
+  else lOverflowW++;
 }
 void SysTick_Handler() 
 { 
   //TestSys++;
 }
-
-
-
-void setup()   {
-
- 
-  //Test led PC13
-  pinMode(OUT_LED, OUTPUT);  //
-  digitalWrite(OUT_LED, LOW);
-
-  /* Systick used by I2C at 1Khz... */ 
+void setup()   
+{
+  /* Systick */ 
   systick_attach_callback(SysTick_Handler);
-
-  
-  
-  //## configure timer_X as quadrature encoder ##
-  pinMode(PA8, INPUT_PULLUP);  //channel A
-  pinMode(PA9, INPUT_PULLUP);  //channel B
-  timer_X.setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
-  timer_X.pause(); //stop... 
-  timer_X.setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
-  timer_X.setOverflow(0xFFFF);    
-  timer_X.setCount(0);          //reset the counter. 
-  timer_X.setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
-  timer_X.attachInterrupt(0, IT_Overflow_X); //Overflow interrupt  
-  timer_X.resume();                 //start the encoder... 
-  //timer_X.getCount();
-
-  //## configure timer_Y as quadrature encoder ##
-  pinMode(PA6, INPUT_PULLUP);  //channel A
-  pinMode(PA7, INPUT_PULLUP);  //channel B
-  timer_Y.setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
-  timer_Y.pause(); //stop... 
-  timer_Y.setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
-  timer_Y.setOverflow(0xFFFF);    
-  timer_Y.setCount(0);          //reset the counter. 
-  timer_Y.setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
-  timer_Y.attachInterrupt(0, IT_Overflow_Y); //Overflow interrupt  
-  timer_Y.resume();                 //start the encoder... 
-  //timer_Y.getCount();
-
-  //## configure timer_Z as quadrature encoder ##
-  pinMode(PA0, INPUT_PULLUP);  //channel A
-  pinMode(PA1, INPUT_PULLUP);  //channel B
-  timer_Z.setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
-  timer_Z.pause(); //stop... 
-  timer_Z.setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
-  timer_Z.setOverflow(0xFFFF);    
-  timer_Z.setCount(0);          //reset the counter. 
-  timer_Z.setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
-  timer_Z.attachInterrupt(0, IT_Overflow_Z); //Overflow interrupt  
-  timer_Z.resume();                 //start the encoder... 
-  //timer_Z.getCount();
-  //## configure timer_W as quadrature encoder ##
-  pinMode(PB6, INPUT_PULLUP);  //channel A
-  pinMode(PB7, INPUT_PULLUP);  //channel B
-  timer_W.setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
-  timer_W.pause(); //stop... 
-  timer_W.setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
-  timer_W.setOverflow(0xFFFF);    
-  timer_W.setCount(0);          //reset the counter. 
-  timer_W.setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
-  timer_W.attachInterrupt(0, IT_Overflow_W); //Overflow interrupt  
-  timer_W.resume();                 //start the encoder... 
-
-  //Start
+  /* IO config */ 
+  pinMode(OUT_LED, OUTPUT);
+  digitalWrite(OUT_LED, LOW);
+  pinMode(PA8, INPUT_PULLUP); 
+  pinMode(PA9, INPUT_PULLUP);
+  pinMode(PA6, INPUT_PULLUP);
+  pinMode(PA7, INPUT_PULLUP);
+  pinMode(PA0, INPUT_PULLUP);
+  pinMode(PA1, INPUT_PULLUP);
+  pinMode(PB6, INPUT_PULLUP);
+  pinMode(PB7, INPUT_PULLUP); 
+  /* Quadratrure decoder */   
+  SetTimerAsQuadratureEncoder(&timer_X,IT_Handler_Quadrature_X);
+  SetTimerAsQuadratureEncoder(&timer_Y,IT_Handler_Quadrature_Y);
+  SetTimerAsQuadratureEncoder(&timer_Z,IT_Handler_Quadrature_Z);
+  SetTimerAsQuadratureEncoder(&timer_W,IT_Handler_Quadrature_W);
+  /* Serial 2 */ 
   Serial2.begin(38400);
-
 }
 
 void loop() 
@@ -134,15 +76,12 @@ void loop()
     long Zvalue;
     long Wvalue;
     char bufferChar[16];
-    //Update encoder
-    Quad_X.CounterValue(timer_X.getCount());
-    Quad_Y.CounterValue(timer_Y.getCount());
-    Quad_Z.CounterValue(timer_Z.getCount());
-    Quad_W.CounterValue(timer_W.getCount());
-    Xvalue = Quad_X.GetValuelong(); 
-    Yvalue = Quad_Y.GetValuelong(); 
-    Zvalue = Quad_Z.GetValuelong(); 
-    Wvalue = Quad_W.GetValuelong(); 
+    //Update encoder    
+    Xvalue = (long)timer_X.getCount() + lOverflowX * 65536;
+    Yvalue = (long)timer_Y.getCount() + lOverflowY * 65536; 
+    Zvalue = (long)timer_Z.getCount() + lOverflowZ * 65536; 
+    Wvalue = (long)timer_W.getCount() + lOverflowW * 65536;     
+    
     delay(50);
     digitalWrite(OUT_LED, !digitalRead(OUT_LED));
     sprintf(bufferChar,"X%ld;",Xvalue);
@@ -153,4 +92,16 @@ void loop()
     Serial2.print(bufferChar);
     sprintf(bufferChar,"W%ld;",Wvalue);
     Serial2.print(bufferChar);     
+}
+
+void SetTimerAsQuadratureEncoder(HardwareTimer *timerConf,voidFuncPtr handler) 
+{
+  timerConf->pause(); //stop... 
+  timerConf->setMode(0, TIMER_ENCODER); //set mode, the channel is not used when in this mode. 
+  timerConf->setPrescaleFactor(1); //normal for encoder to have the lowest or no prescaler. 
+  timerConf->setOverflow(0xFFFF);    
+  timerConf->setCount(0);          //reset the counter. 
+  timerConf->setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
+  timerConf->attachInterrupt(0, handler); //Overflow interrupt  
+  timerConf->resume();                 //start the encoder... 
 }
