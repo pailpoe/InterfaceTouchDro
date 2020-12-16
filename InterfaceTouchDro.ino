@@ -65,17 +65,38 @@ void setup()
   SetTimerAsQuadratureEncoder(&timer_Y,IT_Handler_Quadrature_Y);
   SetTimerAsQuadratureEncoder(&timer_Z,IT_Handler_Quadrature_Z);
   SetTimerAsQuadratureEncoder(&timer_W,IT_Handler_Quadrature_W);
-  /* Serial 2 */ 
-  Serial2.begin(38400);
-}
 
+  /* USB serial */ 
+  Serial.begin();
+  
+  /* Serial 2 for bluetooth module */ 
+  Serial2.begin(9600); // Start at 9600 bauds
+  /* Bluetooth configuration */
+  delay(500);
+  Serial2.print("AT+BAUD6");//38400
+  delay(1500);
+  Serial2.begin(38400); //Switch to 38400 bauds
+  delay(1500);  
+  
+//  while(1)
+//  {
+//    //Write data from HC06 to Serial Monitor
+//    if (Serial2.available()){
+//      Serial.write(Serial2.read());
+//    }
+//    //Write from Serial Monitor to HC06
+//    if (Serial.available()){
+//      Serial2.write(Serial.read());
+//    }  
+//  } 
+}
 void loop() 
 {
     long Xvalue;
     long Yvalue;
     long Zvalue;
     long Wvalue;
-    char bufferChar[16];
+    char bufferChar[100];
     //Update encoder    
     Xvalue = (long)timer_X.getCount() + lOverflowX * 65536;
     Yvalue = (long)timer_Y.getCount() + lOverflowY * 65536; 
@@ -83,17 +104,14 @@ void loop()
     Wvalue = (long)timer_W.getCount() + lOverflowW * 65536;     
     
     delay(50);
-    digitalWrite(OUT_LED, !digitalRead(OUT_LED));
-    sprintf(bufferChar,"X%ld;",Xvalue);
+    digitalWrite(OUT_LED, !digitalRead(OUT_LED)); //Toggle pin led
+    sprintf(bufferChar,"X%ld;Y%ld;Z%ld;W%ld;",Xvalue,Yvalue,Zvalue,Wvalue);
     Serial2.print(bufferChar);
-    sprintf(bufferChar,"Y%ld;",Yvalue);
-    Serial2.print(bufferChar);
-    sprintf(bufferChar,"Z%ld;",Zvalue);
-    Serial2.print(bufferChar);
-    sprintf(bufferChar,"W%ld;",Wvalue);
-    Serial2.print(bufferChar);     
+    if(Serial.isConnected())
+    {
+      Serial.print(bufferChar);    
+    }   
 }
-
 void SetTimerAsQuadratureEncoder(HardwareTimer *timerConf,voidFuncPtr handler) 
 {
   timerConf->pause(); //stop... 
